@@ -3,7 +3,9 @@ const tasksToDoEl = document.querySelector("#tasks-to-do");
 const tasksInProgressEl = document.querySelector("#tasks-in-progress");
 const tasksCompletedEl = document.querySelector("#tasks-completed");
 const pageContentEl = document.querySelector("#page-content");
+
 let taskIdCounter = 0;
+let tasks = [];
 
 const createTaskEl = function(taskDataObj){
   const listItemEl = document.createElement("li");
@@ -21,7 +23,9 @@ const createTaskEl = function(taskDataObj){
   let taskActionsEl = createTaskActions(taskIdCounter);
   listItemEl.appendChild(taskActionsEl);
   tasksToDoEl.appendChild(listItemEl);
-
+  taskDataObj.id = taskIdCounter;
+  tasks.push(taskDataObj);
+  saveTasks();
   taskIdCounter++;
 }
 
@@ -81,10 +85,11 @@ const taskFormHandler = function(event){
   }else {
     const taskDataObj = {
       name: taskNameInput,
-      type: taskTypeInput
+      type: taskTypeInput,
+      status: "to do"
     };
 
-
+ 
     createTaskEl(taskDataObj);
   }
 
@@ -119,6 +124,13 @@ const taskStatusChangeHandler = function(event){
   }else if (statusValue === "completed"){
     tasksCompletedEl.appendChild(taskSelected);
   }
+  
+  for (let i = 0; i < tasks.length; i++){
+    if(tasks[i].id === parseInt(taskId)){
+      tasks[i].status = statusValue;
+    }
+  }
+  saveTasks();
 }
 
 const completeEditTask = function(taskName, taskType, taskId){
@@ -127,6 +139,13 @@ const completeEditTask = function(taskName, taskType, taskId){
   taskSelected.querySelector(`h3.task-name`).textContent = taskName;
   taskSelected.querySelector(`span.task-type`).textContent = taskType;
 
+  for (let i = 0; i < tasks.length; i++){
+    if(tasks[i].id === parseInt(taskId)){
+      tasks[i].name = taskName;
+      tasks[i].type = taskType;
+    }
+  }
+  saveTasks();
   formEl.removeAttribute("data-task-id");
   document.querySelector("#save-task").textContent = "Add Task";
 }
@@ -144,8 +163,21 @@ const editTask = function(taskId){
 const deleteTask = function(taskId){
   const taskSelected = document.querySelector(`.task-item[data-task-id="${taskId}"]`);
   taskSelected.remove();
+
+  let updatedTaskArr = [];
+  for (let i = 0; i < tasks.length; i++){
+    if(tasks[i].id !== parseInt(taskId)){
+      updatedTaskArr.push(tasks[i]);
+    }
+  }
+
+  tasks = updatedTaskArr;
+  saveTasks();
 };
 
+const saveTasks = function(){
+  localStorage.setItem("tasks", JSON.stringify(tasks));
+}
 
 formEl.addEventListener("submit", taskFormHandler ); 
 pageContentEl.addEventListener("click", taskButtonHandler);
